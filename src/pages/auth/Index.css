@@ -1,0 +1,9 @@
+.signup-page, .login-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #eef2ff, #f9fafb);
+    font-family: "Inter", sans-serif;
+}
