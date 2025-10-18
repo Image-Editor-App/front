@@ -12,6 +12,11 @@ const navData = [
         id: 2,
         label: "Profile",
         path: "/profile"
+    },
+    {
+        id: 3,
+        label: "Editor",
+        path: "/editor"
     }
 ]
 

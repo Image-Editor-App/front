@@ -5,6 +5,7 @@ import {Signup} from "../pages/auth/Signup.jsx";
 import {Profile} from "../pages/profile/Profile.jsx";
 import {Home} from "../pages/home/Home.jsx";
 import {ProtectedLayout} from "./ProtectedLayout.jsx";
+import {Editor} from "../pages/editor/Editor.jsx";
 
 export const AppRoutes = () => {
     return (
@@ -17,6 +18,7 @@ export const AppRoutes = () => {
                 <Route element={<ProtectedLayout/>}>
                     <Route path="/home" element={<Home/>}/>
                     <Route path="/profile" element={<Profile/>}/>
+                    <Route path="/editor" element={<Editor />}/>
                 </Route>
             </Routes>
         </Router>
