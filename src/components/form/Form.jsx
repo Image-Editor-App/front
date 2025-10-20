@@ -3,19 +3,17 @@ import {Button} from "../UI/button/Button.jsx";
 
 import "./Form.css"
 
-export const Form = (
-    {
-        title,
-        inputs,
-        formData,
-        setFormData,
-        onSubmit,
-        isLoading,
-        errorMessage,
-        submitLabel,
-        extraLink
-    }
-) => {
+export const Form = ({
+    title,
+    inputs,
+    formData,
+    setFormData,
+    onSubmit,
+    isLoading,
+    errorMessage,
+    submitLabel,
+    extraLink
+}) => {
     const handleChange = event => {
         setFormData({
             ...formData,
