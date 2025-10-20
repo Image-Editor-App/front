@@ -1,90 +1,90 @@
-import {Stage, Layer, Image as KonvaImage, Line, Rect, Transformer} from "react-konva";
-import useImage from "use-image";
-import {useState, useRef, useEffect} from "react";
+import { Stage, Layer } from "react-konva";
+import { useRef, useState } from "react";
+import { URLImage } from "./components/ImageRenderer";
+import { DrawingRenderer } from "./components/DrawingRenderer";
+import { CropOverlay } from "./components/CropOverlay";
+import { useCanvasInteractions } from "./hooks/useCanvasInteractions";
+import { useCrop } from "./hooks/useCrop";
+import { useAspectRatio } from "./hooks/useAspectRatio";
 
-export const CanvasLayer = (
-    {
-        images,
-        setImages,
-        draws,
-        setDraws,
+export const CanvasLayer = ({
+    images,
+    setImages,
+    draws,
+    selectedTool,
+    brushColor,
+    brushSize,
+    zoom,
+    onDrawAdd,
+    onStateChange
+}) => {
+    const stageRef = useRef();
+    const [selectedImageId, setSelectedImageId] = useState(null);
+
+    const { aspectRatioLock, setAspectRatioLock, maintainAspectRatio } = useAspectRatio();
+    const { cropRect, isCropping, startCrop, updateCrop, completeCrop, cancelCrop } = useCrop();
+
+    const {
+        newLine,
+        handleMouseDown,
+        handleMouseMove,
+        handleMouseUp
+    } = useCanvasInteractions({
         selectedTool,
         brushColor,
         brushSize,
-        zoom,
         onDrawAdd,
-        onStateChange
-    }
-) => {
-    const stageRef = useRef(null);
-    const transformerRef = useRef(null);
-    const [newLine, setNewLine] = useState(null);
-    const [cropRect, setCropRect] = useState(null);
-    const [selectedImageId, setSelectedImageId] = useState(null);
+        setSelectedImageId,
+        startCrop,
+        updateCrop,
+        isCropping
+    });
 
-    useEffect(() => {
-        if (selectedTool === "select" && transformerRef.current && selectedImageId !== null) {
-            const selectedNode = stageRef.current.findOne(`#${selectedImageId}`);
-            if (selectedNode) {
-                transformerRef.current.nodes([selectedNode]);
-                transformerRef.current.getLayer().batchDraw();
-            }
-        } else if (transformerRef.current) {
-            transformerRef.current.nodes([]);
-        }
-    }, [selectedImageId, selectedTool]);
+    const handleMouseUpWithCrop = (e) => {
+        handleMouseUp(e);
 
-    const handleMouseDown = (e) => {
-        const pos = e.target.getStage().getPointerPosition();
-
-        if (selectedTool === "draw") {
-            setNewLine({
-                points: [pos.x, pos.y],
-                stroke: brushColor,
-                strokeWidth: brushSize,
-            });
-        } else if (selectedTool === "crop") {
-            setCropRect({x: pos.x, y: pos.y, width: 0, height: 0});
-        } else if (selectedTool === "select") {
-            const clickedOn = e.target.findAncestor("Image");
-            if (clickedOn) {
-                setSelectedImageId(clickedOn.id());
-            } else {
-                setSelectedImageId(null);
+        if (selectedTool === "crop" && isCropping) {
+            const cropData = completeCrop();
+            if (cropData && selectedImageId) {
+                applyCropToImage(cropData);
             }
         }
     };
 
-    const handleMouseMove = (e) => {
-        const pos = e.target.getStage().getPointerPosition();
+    const applyCropToImage = (cropData) => {
+        const imageIndex = parseInt(selectedImageId.split('-')[1]);
+        const image = images[imageIndex];
 
-        if (selectedTool === "draw" && newLine) {
-            setNewLine({
-                ...newLine,
-                points: [...newLine.points, pos.x, pos.y],
-            });
-        } else if (selectedTool === "crop" && cropRect) {
-            setCropRect({
-                ...cropRect,
-                width: pos.x - cropRect.x,
-                height: pos.y - cropRect.y,
-            });
-        }
-    };
+        const newImages = [...images];
+        newImages[imageIndex] = {
+            ...image,
+            crop: cropData,
+            x: cropData.x,
+            y: cropData.y,
+            width: Math.abs(cropData.width),
+            height: Math.abs(cropData.height)
+        };
 
-    const handleMouseUp = () => {
-        if (selectedTool === "draw" && newLine) {
-            onDrawAdd(newLine);
-            setNewLine(null);
-        } else if (selectedTool === "crop" && cropRect) {
-            console.log("Crop area:", cropRect);
-            setCropRect(null);
-        }
+        setImages(newImages);
+        onStateChange();
+        cancelCrop();
     };
 
     const handleImageTransform = (index, newAttrs) => {
         const newImages = [...images];
-        newImages[index] = {...newImages[index], ...newAttrs};
+        const originalImage = newImages[index];
+
+        if (aspectRatioLock && originalImage) {
+            const maintainedSize = maintainAspectRatio(
+                newAttrs.width,
+                newAttrs.height,
+                originalImage.width,
+                originalImage.height
+            );
+            newAttrs = { ...newAttrs, ...maintainedSize };
+        }
+
+        newImages[index] = { ...originalImage, ...newAttrs };
         setImages(newImages);
     };
 
@@ -99,104 +99,27 @@ export const CanvasLayer = (
                 scaleY={zoom}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
+                onMouseUp={handleMouseUpWithCrop}
             >
                 <Layer>
                     {images.map((img, i) => (
                         <URLImage
-                            key={i}
+                            key={`image-${i}`}
                             image={img}
                             isSelected={selectedImageId === `image-${i}`}
                             onSelect={() => setSelectedImageId(`image-${i}`)}
                             onTransform={(attrs) => handleImageTransform(i, attrs)}
+                            aspectRatioLock={aspectRatioLock}
                             id={`image-${i}`}
                         />
                     ))}
-                    {draws.map((line, i) => (
-                        <Line
-                            key={i}
-                            points={line.points}
-                            stroke={line.stroke}
-                            strokeWidth={line.strokeWidth}
-                            tension={0.5}
-                            lineCap="round"
-                            lineJoin="round"
-                        />
-                    ))}
-                    {newLine && (
-                        <Line
-                            points={newLine.points}
-                            stroke={newLine.stroke}
-                            strokeWidth={newLine.strokeWidth}
-                            tension={0.5}
-                            lineCap="round"
-                            lineJoin="round"
-                        />
-                    )}
-                    {cropRect && (
-                        <Rect
-                            x={cropRect.x}
-                            y={cropRect.y}
-                            width={cropRect.width}
-                            height={cropRect.height}
-                            stroke="blue"
-                            strokeWidth={2}
-                            dash={[5, 5]}
-                        />
-                    )}
-                    {selectedTool === "select" && (
-                        <Transformer ref={transformerRef}/>
-                    )}
+                    <DrawingRenderer
+                        draws={draws}
+                        newLine={newLine}
+                    />
+                    {isCropping && <CropOverlay rect={cropRect} />}
                 </Layer>
             </Stage>
         </div>
-    );
-};
-
-const URLImage = ({image, isSelected, onSelect, onTransform, id}) => {
-    const [img] = useImage(image.src);
-    const imageRef = useRef();
-
-    useEffect(() => {
-        if (isSelected && imageRef.current) {
-            onTransform({
-                x: imageRef.current.x(),
-                y: imageRef.current.y(),
-                width: imageRef.current.width(),
-                height: imageRef.current.height(),
-            });
-        }
-    }, [isSelected, onTransform]);
-
-    return (
-        <KonvaImage
-            id={id}
-            ref={imageRef}
-            image={img}
-            x={image.x}
-            y={image.y}
-            width={image.width}
-            height={image.height}
-            draggable
-            onClick={onSelect}
-            onTap={onSelect}
-            onDragEnd={(e) => {
-                onTransform({
-                    x: e.target.x(),
-                    y: e.target.y(),
-                });
-            }}
-            onTransformEnd={(e) => {
-                const node = imageRef.current;
-                onTransform({
-                    x: node.x(),
-                    y: node.y(),
-                    width: node.width() * node.scaleX(),
-                    height: node.height() * node.scaleY(),
-                });
-                node.scaleX(1);
-                node.scaleY(1);
-            }}
-        />
     );
 };
