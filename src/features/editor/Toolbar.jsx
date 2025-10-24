@@ -1,220 +1,191 @@
-import { useRef, useState } from "react";
-import { ChromePicker } from "react-color";
-import { useRemoveBackgroundMutation } from "../../app/api/imageApi.js";
-import { useDispatch, useSelector } from "react-redux";
-import { setProcessing, setProcessedImage, setError } from "./imageSlice.js";
+import {FaImage, FaSearchPlus, FaSearchMinus, FaPaintBrush} from "react-icons/fa";
+import {ImCrop} from "react-icons/im";
+import {BsFillAspectRatioFill} from "react-icons/bs";
+import {RiResetRightLine} from "react-icons/ri";
+
+import {useImageUpload} from "./hooks/useImageUpload.js";
+import {useResize} from "./hooks/useResize.js";
+import {Input} from "../../components/UI/input/Input.jsx";
+import {Button} from "../../components/UI/button/Button.jsx";
+import {IoArrowRedo, IoArrowUndo} from "react-icons/io5";
 
 export const Toolbar = ({
-    selectedTool,
-    setSelectedTool,
     onImageAdd,
-    brushColor,
-    setBrushColor,
+    onToggleCrop,
+    onResize,
+    isCropping,
+    onToggleDrawing,
+    isDrawingMode,
     brushSize,
+    brushColor,
     setBrushSize,
+    setBrushColor,
     zoom,
     onZoomIn,
     onZoomOut,
-    onResetZoom,
+    onResetView,
+    onZoomChange,
     onUndo,
-    onRedo,
-    aspectRatioLock,
-    setAspectRatioLock,
-    isCropping = false,
-    onApplyCrop = () => {},
-    onCancelCrop = () => {},
+    onRedo
 }) => {
-    const fileRef = useRef();
-    const [showColorPicker, setShowColorPicker] = useState(false);
-    const [showBrushControls, setShowBrushControls] = useState(false);
-    const [removeBackground, { isLoading: isRemovingBackground }] = useRemoveBackgroundMutation();
-    const dispatch = useDispatch();
-    const { processing } = useSelector((state) => state.image);
-
-    const handleUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        if (file.size > 10 * 1024 * 1024) {
-            alert("The image must not exceed 10 MB!");
-            return;
-        }
-
-        const src = URL.createObjectURL(file);
-        onImageAdd({ src, x: 50, y: 50, width: 400, height: 400, file });
-    };
-
-    const handleRemoveBackground = async () => {
-        const fileInput = fileRef.current;
-        if (!fileInput || !fileInput.files[0]) {
-            alert("Please upload an image first");
-            return;
-        }
-
-        const file = fileInput.files[0];
-
-        try {
-            dispatch(setProcessing(true));
-
-            const formData = new FormData();
-            formData.append("image", file);
-
-            const processedImageUrl = await removeBackground(formData).unwrap();
-
-            dispatch(setProcessedImage(processedImageUrl));
-
-            onImageAdd({
-                src: processedImageUrl,
-                x: 50,
-                y: 50,
-                width: 400,
-                height: 400,
-                isProcessed: true,
-            });
-
-        } catch (error) {
-            console.error("Background removal failed:", error);
-            dispatch(setError("Background removal failed. Please try again."));
-            alert("Background removal failed. Please try again.");
-        } finally {
-            dispatch(setProcessing(false));
-        }
-    };
-
-    const handleToolSelect = (tool) => {
-        setSelectedTool(tool);
-        if (tool === "draw") {
-            setShowBrushControls(true);
-        } else {
-            setShowBrushControls(false);
-        }
-    };
+    const {fileRef, handleUpload, triggerFileInput} = useImageUpload(onImageAdd);
+    const {
+        showResize,
+        width,
+        height,
+        lockAspect,
+        aspectRatio,
+        customRatio,
+        setWidth,
+        setHeight,
+        setLockAspect,
+        setAspectRatio,
+        setCustomRatio,
+        handleResizeSubmit,
+        toggleResize
+    } = useResize(onResize);
 
     return (
-        <div className="toolbar">
-            <div className="toolbar-section">
-                <input
-                    type="file"
-                    ref={fileRef}
-                    className="file-input"
-                    onChange={handleUpload}
-                    accept="image/*"
-                />
-                <button
-                    className="toolbar-btn"
-                    onClick={() => fileRef.current.click()}
-                >
-                    📁 Upload Image
-                </button>
+        <div className="tool-bar">
+            <Input type="file" ref={fileRef} onChange={handleUpload} accept="image/*"/>
+            <Button onClick={triggerFileInput} title="Upload Image" className="tool-btn">
+                <FaImage size={20}/>
+            </Button>
 
-                <button
-                    className={`toolbar-btn ${isRemovingBackground || processing ? "processing" : ""}`}
-                    onClick={handleRemoveBackground}
-                    disabled={isRemovingBackground || processing}
-                >
-                    {isRemovingBackground || processing ? "🔄 Removing Background..." : "✂️ Remove Background"}
-                </button>
-            </div>
+            <Button
+                onClick={onToggleCrop}
+                title={isCropping ? "Exit Crop Mode" : "Crop Image"}
+                className={`tool-btn ${isCropping ? "active" : ""}`}
+            >
+                <ImCrop size={20}/>
+            </Button>
 
-            <div className="toolbar-section">
-                <button
-                    className={`toolbar-btn ${selectedTool === "select" ? "active" : ""}`}
-                    onClick={() => handleToolSelect("select")}
-                >
-                    👆 Select
-                </button>
-                <button
-                    className={`toolbar-btn ${selectedTool === "draw" ? "active" : ""}`}
-                    onClick={() => handleToolSelect("draw")}
-                >
-                    ✏️ Draw
-                </button>
-                <button
-                    className={`toolbar-btn ${selectedTool === "crop" ? "active" : ""}`}
-                    onClick={() => handleToolSelect("crop")}
-                >
-                    🔲 Crop
-                </button>
-            </div>
+            <Button
+                onClick={toggleResize}
+                title="Resize Image"
+                className={`tool-btn ${showResize ? "active" : ""}`}
+            >
+                <BsFillAspectRatioFill size={20}/>
+            </Button>
 
-            {showBrushControls && (
-                <div className="toolbar-section brush-controls">
-                    <div className="color-control">
-                        <button
-                            className="color-btn"
-                            onClick={() => setShowColorPicker(!showColorPicker)}
-                            style={{ backgroundColor: brushColor }}
-                            title="Brush Color"
-                        >
-                            🎨
-                        </button>
-                        {showColorPicker && (
-                            <div className="color-picker-popover">
-                                <ChromePicker
-                                    color={brushColor}
-                                    onChange={(color) => setBrushColor(color.hex)}
-                                />
-                            </div>
-                        )}
-                    </div>
+            <Button
+                onClick={onToggleDrawing}
+                title={isDrawingMode ? "Exit Drawing Mode" : "Draw on Canvas"}
+                className={`tool-btn ${isDrawingMode ? "active" : ""}`}
+            >
+                <FaPaintBrush size={20}/>
+            </Button>
 
-                    <div className="brush-size-control">
-                        <label>Brush Size:</label>
-                        <input
+            {isDrawingMode && (
+                <div className="drawing-controls">
+                    <label>
+                        Brush Size:
+                        <Input
                             type="range"
                             min="1"
                             max="50"
                             value={brushSize}
-                            onChange={(e) => setBrushSize(parseInt(e.target.value))}
-                            className="brush-slider"
+                            onChange={(e) => setBrushSize(Number(e.target.value))}
                         />
-                        <span className="brush-size-value">{brushSize}px</span>
+                    </label>
+
+                    <label>
+                        Color:
+                        <Input
+                            type="color"
+                            value={brushColor}
+                            onChange={(e) => setBrushColor(e.target.value)}
+                        />
+                    </label>
+                </div>
+            )}
+
+            {showResize && (
+                <div className="resize-modal">
+                    <label>
+                        Width:
+                        <Input
+                            type="number"
+                            value={width}
+                            onChange={(event) => setWidth(Number(event.target.value))}
+                        />
+                    </label>
+                    <label>
+                        Height:
+                        <Input
+                            type="number"
+                            value={height}
+                            onChange={(event) => setHeight(Number(event.target.value))}
+                        />
+                    </label>
+
+                    <div className="aspect-controls">
+                        <label>
+                            <Input
+                                type="checkbox"
+                                checked={lockAspect}
+                                onChange={() => setLockAspect(!lockAspect)}
+                            />
+                            Lock Aspect Ratio
+                        </label>
+
+                        <select
+                            value={aspectRatio}
+                            onChange={(event) => setAspectRatio(event.target.value)}
+                            disabled={!lockAspect}
+                        >
+                            <option value="1:1">1:1 (Square)</option>
+                            <option value="16:9">16:9 (Widescreen)</option>
+                            <option value="4:3">4:3 (Standard)</option>
+                            <option value="3:2">3:2 (Photo)</option>
+                            <option value="custom">Custom</option>
+                        </select>
+
+                        {aspectRatio === "custom" && (
+                            <Input
+                                type="text"
+                                placeholder="e.g. 5:4"
+                                value={customRatio}
+                                onChange={(event) => setCustomRatio(event.target.value)}
+                                className="custom-input"
+                            />
+                        )}
                     </div>
+
+                    <Button className="apply-btn" onClick={handleResizeSubmit}>
+                        Apply
+                    </Button>
                 </div>
             )}
 
-            {selectedTool === "crop" && isCropping && (
-                <div className="toolbar-section crop-actions">
-                    <button className="toolbar-btn success" onClick={onApplyCrop}>
-                        ✅ Apply Crop
-                    </button>
-                    <button className="toolbar-btn danger" onClick={onCancelCrop}>
-                        ❌ Cancel
-                    </button>
-                </div>
-            )}
+            <Button onClick={onUndo} title="Undo" className="tool-btn">
+                <IoArrowUndo size={20}/>
 
-            <div className="toolbar-section">
-                <button
-                    className={`toolbar-btn ${aspectRatioLock ? "active" : ""}`}
-                    onClick={() => setAspectRatioLock(!aspectRatioLock)}
-                    title="Maintain aspect ratio when resizing"
-                >
-                    {aspectRatioLock ? "🔒 Locked" : "🔓 Unlocked"}
-                </button>
-            </div>
+            </Button>
+            <Button onClick={onRedo} title="Redo" className="tool-btn">
+                <IoArrowRedo size={20}/>
+            </Button>
 
-            <div className="toolbar-section zoom-controls">
-                <button className="toolbar-btn" onClick={onZoomOut} title="Zoom Out">
-                    🔍-
-                </button>
-                <span className="zoom-display">{Math.round(zoom * 100)}%</span>
-                <button className="toolbar-btn" onClick={onZoomIn} title="Zoom In">
-                    🔍+
-                </button>
-                <button className="toolbar-btn" onClick={onResetZoom} title="Reset Zoom">
-                    🔄 Reset
-                </button>
-            </div>
-
-            <div className="toolbar-section history-controls">
-                <button className="toolbar-btn" onClick={onUndo} title="Undo">
-                    ↩️ Undo
-                </button>
-                <button className="toolbar-btn" onClick={onRedo} title="Redo">
-                    ↪️ Redo
-                </button>
-            </div>
+            <Button onClick={onZoomIn} title="Zoom In" className="tool-btn">
+                <FaSearchPlus size={20}/>
+            </Button>
+            <Button onClick={onZoomOut} title="Zoom Out" className="tool-btn">
+                <FaSearchMinus size={20}/>
+            </Button>
+            <Button onClick={onResetView} title="Reset View" className="tool-btn">
+                <RiResetRightLine size={20}/>
+            </Button>
+            <label style={{color: "#fff", display: "flex", alignItems: "center", gap: "4px"}}>
+                <Input
+                    type="number"
+                    min="0.2"
+                    max="3"
+                    step="0.1"
+                    value={zoom}
+                    onChange={(e) => onZoomChange(parseFloat(e.target.value))}
+                    style={{width: "50px"}}
+                />
+            </label>
         </div>
     );
 };
