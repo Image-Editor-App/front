@@ -1,0 +1,12 @@
+{
+    "login": [
+        {"name": "email", "type": "email", "placeholder": "Email"},
+        {"name": "password", "type": "password", "placeholder": "Password"}
+
+    ],
+    "signup": [
+        {"name": "fullName", "type": "text", "placeholder": "Full Name"},
+        {"name": "email", "type": "email", "placeholder": "Email"},
+        {"name": "password", "type": "password", "placeholder": "Password"}
+    ]
+}
