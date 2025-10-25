@@ -1,4 +1,4 @@
-import {CanvasEditor} from "../../features/editor/CanvasEditor.jsx";
+import {CanvasEditor} from "../components/CanvasEditor.jsx";
 
 export const Editor = () => {
     return (

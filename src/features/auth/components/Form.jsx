@@ -1,7 +1,7 @@
-import {Input} from "../UI/input/Input.jsx";
-import {Button} from "../UI/button/Button.jsx";
+import {Input} from "../../../shared/components/UI/input/Input.jsx";
+import {Button} from "../../../shared/components/UI/button/Button.jsx";
 
-import "./Form.css"
+import "../style/Index.css"
 
 export const Form = ({
     title,
@@ -24,7 +24,7 @@ export const Form = ({
     return (
         <form className="form" onSubmit={onSubmit}>
             <h1>{title}</h1>
-            {errorMessage && <p>{errorMessage}</p>}
+            {errorMessage && <p className="error-message">{errorMessage}</p>}
 
             {inputs.map(({name, type, placeholder}) => (
                 <Input
@@ -37,8 +37,8 @@ export const Form = ({
                 />
             ))}
 
-            <Button tyoe="submit" disabled={isLoading}>{submitLabel}</Button>
-            {extraLink && <p>{extraLink}</p>}
+            <Button type="submit" disabled={isLoading}>{submitLabel}</Button>
+            {extraLink && <p className="dont-have">{extraLink}</p>}
         </form>
     );
 };

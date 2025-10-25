@@ -5,16 +5,11 @@ import "./Header.css"
 const navData = [
     {
         id: 1,
-        label: "Home",
-        path: "/home"
-    },
-    {
-        id: 2,
         label: "Profile",
         path: "/profile"
     },
     {
-        id: 3,
+        id: 2,
         label: "Editor",
         path: "/editor"
     }

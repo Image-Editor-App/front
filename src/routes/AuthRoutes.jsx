@@ -1,5 +1,5 @@
 import {Navigate} from "react-router-dom";
-import {useAuth} from "./useAuth.js";
+import {useAuth} from "../features/auth/hooks/useAuth.js";
 
 export const AuthRoutes = ({children}) => {
     return useAuth().isAuthenticated

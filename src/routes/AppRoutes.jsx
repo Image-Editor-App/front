@@ -1,11 +1,10 @@
 import {BrowserRouter as Router, Routes, Route, Navigate} from "react-router-dom";
 
-import {Login} from "../pages/auth/login.jsx";
-import {Signup} from "../pages/auth/Signup.jsx";
-import {Profile} from "../pages/profile/Profile.jsx";
-import {Home} from "../pages/home/Home.jsx";
+import {Login} from "../features/auth/pages/Login.jsx";
+import {Signup} from "../features/auth/pages/Signup.jsx";
+import {Profile} from "../features/profile/pages/Profile.jsx";
 import {ProtectedLayout} from "./ProtectedLayout.jsx";
-import {Editor} from "../pages/editor/Editor.jsx";
+import {Editor} from "../features/editor/pages/Editor.jsx";
 
 export const AppRoutes = () => {
     return (
@@ -16,7 +15,6 @@ export const AppRoutes = () => {
                 <Route path="/login" element={<Login/>}/>
                 <Route path="*" element={<h1>Page Not Found</h1>}/>
                 <Route element={<ProtectedLayout/>}>
-                    <Route path="/home" element={<Home/>}/>
                     <Route path="/profile" element={<Profile/>}/>
                     <Route path="/editor" element={<Editor />}/>
                 </Route>

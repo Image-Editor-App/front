@@ -1,5 +1,5 @@
 .button {
-    background-color: #6366f1;
+    background-color: #303030;
     color: white;
     border: none;
     padding: 0.9rem;
@@ -11,6 +11,6 @@
 }
 
 .button:hover {
-    background-color: #4f46e5;
+    background-color: #000;
     transform: translateY(-2px);
 }

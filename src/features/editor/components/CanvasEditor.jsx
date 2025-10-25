@@ -1,12 +1,12 @@
 import {useState, useRef, useEffect} from "react";
 
-import {Toolbar} from "./Toolbar";
-import {useImageAdd} from "./hooks/useImageAdd.js";
-import {useCropHandlers} from "./hooks/useCropHandlers.js";
-import {useCanvasDrawing} from "./hooks/useCanvasDrawing.js";
-import {useDrawing} from "./hooks/useDrawing.js";
+import {Toolbar} from "./Toolbar.jsx";
+import {useImageAdd} from "../hooks/useImageAdd.js";
+import {useCropHandlers} from "../hooks/useCropHandlers.js";
+import {useCanvasDrawing} from "../hooks/useCanvasDrawing.js";
+import {useDrawing} from "../hooks/useDrawing.js";
 
-import "./CanvasEditor.css";
+import "../style/Index.css";
 
 export const CanvasEditor = () => {
     const [images, setImages] = useState([]);

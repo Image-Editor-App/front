@@ -2,12 +2,12 @@ import {FaImage, FaSearchPlus, FaSearchMinus, FaPaintBrush} from "react-icons/fa
 import {ImCrop} from "react-icons/im";
 import {BsFillAspectRatioFill} from "react-icons/bs";
 import {RiResetRightLine} from "react-icons/ri";
-
-import {useImageUpload} from "./hooks/useImageUpload.js";
-import {useResize} from "./hooks/useResize.js";
-import {Input} from "../../components/UI/input/Input.jsx";
-import {Button} from "../../components/UI/button/Button.jsx";
 import {IoArrowRedo, IoArrowUndo} from "react-icons/io5";
+
+import {useImageUpload} from "../hooks/useImageUpload.js";
+import {useResize} from "../hooks/useResize.js";
+import {Input} from "../../../shared/components/UI/input/Input.jsx";
+import {Button} from "../../../shared/components/UI/button/Button.jsx";
 
 export const Toolbar = ({
     onImageAdd,

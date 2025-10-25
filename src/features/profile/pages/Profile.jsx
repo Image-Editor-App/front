@@ -1,11 +1,11 @@
 import {useSelector, useDispatch} from "react-redux";
 import {useNavigate} from "react-router-dom";
 
-import {Button} from "../../components/UI/button/Button.jsx";
-import {logout} from "../../features/auth/authSlice.js";
-import {useLogoutUserMutation} from "../../app/api/authApi.js";
+import {Button} from "../../../shared/components/UI/button/Button.jsx";
+import {logout} from "../../auth/store/authSlice.js";
+import {useLogoutUserMutation} from "../../../app/api/authApi.js";
 
-import "./Profile.css"
+import "../style/Index.css"
 
 export const Profile = () => {
     const dispatch = useDispatch();
